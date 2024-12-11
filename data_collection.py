@@ -17,7 +17,7 @@ def savePatches():
     height, width = image.shape[:2]
 
 
-    with open('Centers', 'r') as f:
+    with open('stored/Centers', 'r') as f:
         centers = [tuple(map(int, line.strip().split(','))) for line in f.readlines()]
 
         for (x, y) in centers:
@@ -34,25 +34,19 @@ def savePatches():
 
 
 def top_colors_with_clustering(image_path, n_colors=5):
-    # Load the image
     image = cv2.imread(image_path)
     hsv_image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
-    # Reshape image data for clustering (flatten to Nx3)
     pixels = hsv_image.reshape(-1, 3)
 
-    # Apply K-Means clustering to group similar colors
     kmeans = KMeans(n_clusters=n_colors, random_state=42)
     kmeans.fit(pixels)
 
-    # Get cluster centroids (the representative colors)
     cluster_centers = kmeans.cluster_centers_
 
-    # Get cluster sizes to determine the most common colors
     unique, counts = np.unique(kmeans.labels_, return_counts=True)
-    sorted_indices = np.argsort(-counts)  # Sort clusters by size (descending)
+    sorted_indices = np.argsort(-counts)
 
-    # Sort the clusters by their population and get the top N colors
     top_colors = cluster_centers[sorted_indices].astype(int)
 
     return top_colors
@@ -74,8 +68,7 @@ def visualize_colors(colors):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-# Example usage
-image_path = "test.png"  # Replace with your image path
+image_path = "patch.png"
 top_colors = top_colors_with_clustering(image_path, n_colors=5)
 print(f"Top HSV colors (clustered): {top_colors}")
 visualize_colors(top_colors)

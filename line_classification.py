@@ -10,11 +10,11 @@ def classifyLines(image):
     processed = []
     lines = []
 
-    line_template = cv2.imread("line.png")
-    prevline_template = cv2.imread("prevline.png")
-    entityline_template = cv2.imread("entitiyline.png")
+    line_template = cv2.imread("stored/line.png")
+    prevline_template = cv2.imread("stored/prevline.png")
+    entityline_template = cv2.imread("stored/entitiyline.png")
 
-    with open('Centers', 'r') as f:
+    with open('stored/Centers', 'r') as f:
         centers = [tuple(map(int, line.strip().split(','))) for line in f.readlines()]
 
     for x in centers:

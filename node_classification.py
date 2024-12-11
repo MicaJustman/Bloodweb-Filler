@@ -10,7 +10,7 @@ def classifyNodes(image):
     # List to collect all patches and their coordinates
     predictions = []
 
-    with open('Centers', 'r') as f:
+    with open('stored/Centers', 'r') as f:
         centers = [tuple(map(int, line.strip().split(','))) for line in f.readlines()]
 
     for (x, y) in centers:

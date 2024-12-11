@@ -43,20 +43,16 @@ def save(image, name, counter):
     if not os.path.exists('data/' + str(counter) + '/'):
         os.makedirs('data/' + str(counter) + '/')
 
-    while True:
-        file_path = os.path.join('data/' + str(counter) + '/', name)
+    file_path = os.path.join('data/' + str(counter) + '/', name)
+    cv2.imwrite(file_path, image)
+    return file_path
 
-        if not os.path.exists(file_path):
-            cv2.imwrite(file_path, image)
-            return file_path
-
-        counter += 1
 def showScreen(img):
     cv2.imshow("Captured Window", img)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def showNodes(img, nodes, counter):
+def showNodes(img, nodes, counter, s):
     image = img.copy()
     for (x, y, node_type, subclass) in nodes:
         center = (x, y)
@@ -80,18 +76,22 @@ def showNodes(img, nodes, counter):
         if node_type == 3:  # Red Nodes
             cv2.circle(image, center, 5, colors["Red"], 14)
 
-    save(image, "nodes.png", counter)
-    #showScreen(image)
+    if s:
+        save(image, "nodes.png", counter)
+    else:
+        showScreen(image)
 
-def showLines(img, lines, counter):
+def showLines(img, lines, counter, s):
     image = img.copy()
     for x in lines:
         cv2.line(image, x[0], x[1], colors["Green"], 2, cv2.LINE_AA)
 
-    save(image, "lines.png", counter)
-    #showScreen(image)
+    if s:
+        save(image, "lines.png", counter)
+    else:
+        showScreen(image)
 
-def showTrees(img, trees, counter):
+def showTrees(img, trees, counter, s):
     image = img.copy()
     color_list = list(colors.values())
     counter = 0
@@ -116,5 +116,7 @@ def showTrees(img, trees, counter):
         if change_color:
             counter += 1
 
-    save(image, "tree.png", counter)
-    #showScreen(image)
+    if s:
+        save(image, "tree.png", counter)
+    else:
+        showScreen(image)

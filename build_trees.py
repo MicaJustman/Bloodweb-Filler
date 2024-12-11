@@ -2,7 +2,7 @@ import math
 
 import cv2
 
-from screen_functions import showScreen
+from screen_functions import showScreen, showTrees
 
 
 class TreeNode:
@@ -30,7 +30,7 @@ class TreeNode:
 class Tree:
     def __init__(self, node):
         self.root = TreeNode(node)
-        self.corrupted = False
+        self.corrupted = 0
 
     def children_tally(self):
         return len(self.traverse())
@@ -40,33 +40,35 @@ class Tree:
         else:
             return []
 
+    def check_for_multiple_children(self):
+        nodes_to_check = self.traverse()
+        for node in nodes_to_check:
+            if len(node.children) > 1:
+                return True
+        return False
+
 def calculate_distance(point, center):
     x1, y1 = point[0], point[1]
     x2, y2 = center[0], center[1]
     return math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-def sortTrees(trees):
-    non_corrupted = [tree for tree in trees if not tree.corrupted]
-    corrupted = [tree for tree in trees if tree.corrupted]
+def sortTrees(trees, levels, web_center):
+    non_corrupted = [tree for tree in trees if tree.corrupted == 0]
+    corrupted = [tree for tree in trees if tree.corrupted != 0]
 
     non_corrupted_sorted = sorted(non_corrupted, key=lambda tree: tree.children_tally())
 
-    corrupted_sorted_less_than_3 = sorted([tree for tree in corrupted if tree.children_tally() < 3], key=lambda tree: tree.children_tally())
-    corrupted_sorted_rest = sorted([tree for tree in corrupted if tree.children_tally() >= 3], key=lambda tree: tree.children_tally())
+    corrupted_sorted = sorted(corrupted, key=lambda tree: tree.children_tally())
 
-    sorted_trees = corrupted_sorted_less_than_3 + non_corrupted_sorted + corrupted_sorted_rest
+    sorted_trees = non_corrupted_sorted + corrupted_sorted
 
     return sorted_trees
-def buildTrees(nodes, lines, image):
-    web_center = (683, 562)
-    counter = 1
+def buildTrees(nodes, lines, web_center, levels):
     processed = []
     trees = []
 
-    sorted_nodes = sorted(nodes, key=lambda point: calculate_distance(point, web_center))
-
     def findChildren(root):
-        for child in sorted_nodes:
+        for child in nodes:
             if child not in processed and child[2] == 2 and (((root.node[0], root.node[1]), (child[0], child[1])) in lines or
                                                              ((child[0], child[1]), (root.node[0], root.node[1])) in lines):
                 if calculate_distance((child[0], child[1]), web_center) > calculate_distance((root.node[0], root.node[1]), web_center) + 20:
@@ -78,14 +80,22 @@ def buildTrees(nodes, lines, image):
                     findChildren(child_node)
 
             if child[2] == 0 and (((root.node[0], root.node[1]), (child[0], child[1])) in lines or ((child[0], child[1]), (root.node[0], root.node[1])) in lines):
-                trees[len(trees) - 1].corrupted = True
+                distance = calculate_distance((child[0], child[1]), web_center)
+                center_level = min(levels, key=lambda x: abs(x - distance))
+
+                if center_level == levels[0]:
+                    trees[len(trees) - 1].corrupted = 1
+                elif center_level == levels[1]:
+                    trees[len(trees) - 1].corrupted = 2
+                else:
+                    trees[len(trees) - 1].corrupted = 3
         return
 
-    for node in sorted_nodes:
+    for node in nodes:
         if node not in processed and node[2] == 2:
             processed.append(node)
             trees.append(Tree(node))
 
             findChildren(trees[len(trees) - 1].root)
 
-    return sortTrees(trees)
+    return sortTrees(trees, levels, web_center)
