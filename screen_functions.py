@@ -36,7 +36,8 @@ colors = {
     "Grey": (93, 109, 126),
     "Brown": (109, 76, 65),
     "Pink": (186, 104, 200),
-    "Black": (0, 0, 0)
+    "Black": (0, 0, 0),
+    "White": (255, 255, 255)
 }
 
 def save(image, name, counter):
@@ -52,71 +53,47 @@ def showScreen(img):
     cv2.waitKey(0)
     cv2.destroyAllWindows()
 
-def showNodes(img, nodes, counter, s):
+def showNodes(img, nodes, s, counter=0):
     image = img.copy()
-    for (x, y, node_type, subclass) in nodes:
-        center = (x, y)
-        cv2.circle(image, (683, 562), 5, (255, 0, 0), 14)
+    for node in nodes:
+        center = (node.position[0], node.position[1])
 
-        if node_type == 0:  # Black Nodes
-            cv2.circle(image, center, 5, colors["Black"], 14)
-        if node_type == 1:  # Blank Nodes
-            cv2.circle(image, center, 5, colors["Green"], 14)
-        if node_type == 2:  # Green Nodes
-            if subclass == 1:
-                cv2.circle(image, center, 40, (51, 64, 92), 5)
-            elif subclass == 2:
-                cv2.circle(image, center, 40, (51, 189, 255), 5)
-            elif subclass == 3:
-                cv2.circle(image, center, 40, (55, 204, 47), 5)
-            elif subclass == 4:
-                cv2.circle(image, center, 40, (188, 19, 236), 5)
-            elif subclass == 5:
-                cv2.circle(image, center, 40, (59, 29, 152), 5)
-        if node_type == 3:  # Red Nodes
+        if node.type == -1: # Center Node
+            cv2.circle(image, center, 5, colors["White"], 14)
+        if node.type == 0:  # Red Nodes
             cv2.circle(image, center, 5, colors["Red"], 14)
+        if node.type == 1:  # Black Nodes
+            cv2.circle(image, center, 5, colors["Blue"], 14)
+        if node.type == 2:  # Green Nodes
+            cv2.circle(image, center, 5, colors["Green"], 14)
 
     if s:
         save(image, "nodes.png", counter)
     else:
         showScreen(image)
 
-def showLines(img, lines, counter, s):
+def showEdges(img, lines, counter, s):
     image = img.copy()
     for x in lines:
-        cv2.line(image, x[0], x[1], colors["Green"], 2, cv2.LINE_AA)
+        cv2.line(image, x[0].position, x[1].position, colors["Green"], 2, cv2.LINE_AA)
 
     if s:
         save(image, "lines.png", counter)
     else:
         showScreen(image)
 
-def showTrees(img, trees, counter, s):
+def showGraphs(img, graphs, edges, s, counter=0):
     image = img.copy()
-    color_list = list(colors.values())
     counter = 0
 
-    for tree in trees:
-        treenodes = tree.traverse()
-        change_color = False
+    for graph in graphs:
+        for edge in edges:
+            if edge[0] in graph.nodes and edge[1] in graph.nodes:
+                cv2.line(image, edge[0].position, edge[1].position, list(colors.values())[counter], 4, cv2.LINE_AA)
 
-        for treenode in treenodes:
-            if tree.root.parent is None and len(tree.root.children) == 0:
-                cv2.circle(image, (treenode.node[0], treenode.node[1]), 40, colors["Black"], 4)
-            else:
-                cv2.circle(image, (treenode.node[0], treenode.node[1]), 40, color_list[counter], 4)
-                change_color = True
-
-            if tree.corrupted:
-                cv2.circle(image, (tree.root.node[0], tree.root.node[1]), 7 , colors["Black"], 18)
-
-            if tree.root.parent is None:
-                cv2.putText(image, str(tree.children_tally()), (tree.root.node[0] - 5, tree.root.node[1] + 7), cv2.FONT_HERSHEY_SIMPLEX, .7, color_list[counter], 2, 1)
-
-        if change_color:
-            counter += 1
+        counter += 1
 
     if s:
-        save(image, "tree.png", counter)
+        save(image, "graphs.png", counter)
     else:
         showScreen(image)

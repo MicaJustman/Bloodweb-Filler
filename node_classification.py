@@ -1,5 +1,7 @@
 import cv2
 from numpy import array, sum
+
+from graph_builder import GraphNode
 from screen_functions import showScreen
 
 def classifyNodes(image):
@@ -7,14 +9,12 @@ def classifyNodes(image):
     patch_size = 80
     half_patch = patch_size // 2
 
-    # List to collect all patches and their coordinates
-    predictions = []
+    graph_nodes = []
 
     with open('stored/Centers', 'r') as f:
-        centers = [tuple(map(int, line.strip().split(','))) for line in f.readlines()]
+        centers = [list(map(int, line.strip().split(','))) for line in f.readlines()]
 
-    for (x, y) in centers:
-        # Calculate the bounding box for the patch centered at (x, y)
+    for (x, y, l) in centers:
         left = max(x - half_patch, 0)
         top = max(y - half_patch, 0)
         right = min(x + half_patch, width)
@@ -65,87 +65,17 @@ def classifyNodes(image):
         iris = sum(mask > 0)  # check above 800
 
         if reds > 400:
-            predictions.append((x, y, 3, 0))
+            graph_node = GraphNode((x, y), l, 0)
+            graph_nodes.append(graph_node)
         elif blacks > 1000:
-            predictions.append((x, y, 0, 0))
-        elif browns > 800 and whites > 50:
-            predictions.append((x, y, 2, 1))
-        elif yellows > 800:
-            predictions.append((x, y, 2, 2))
-        elif greens > 800:
-            predictions.append((x, y, 2, 3))
-        elif purples > 800:
-            predictions.append((x, y, 2, 4))
-        elif iris > 800:
-            predictions.append((x, y, 2, 5))
-        else:
-            predictions.append((x, y, 1, 0))
+            graph_node = GraphNode((x, y), l, 1)
+            graph_nodes.append(graph_node)
+        elif (browns > 800 and whites > 50) or yellows > 800 or greens > 800 or purples > 800 or iris > 800:
+            graph_node = GraphNode((x, y), l, 2)
+            graph_nodes.append(graph_node)
 
+        if l == 0:
+            graph_node = GraphNode((x, y), l, -1)
+            graph_nodes.insert(0, graph_node)
 
-    return predictions
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-'''transform = transforms.Compose([
-    transforms.Resize((100, 100)),
-    transforms.ToTensor(),
-    transforms.Normalize([.5], [.5], [.5])
-])
-
-device = torch.device('cuda')
-
-
-def evaluateImage(image, model):
-    height, width = image.shape[:2]
-    patch_size = 100
-    half_patch = patch_size // 2
-
-    # List to collect all patches and their coordinates
-    patches = []
-
-    with open('Centers', 'r') as f:
-        centers = [tuple(map(int, line.strip().split(','))) for line in f.readlines()]
-
-        for (x, y) in centers:
-            # Calculate the bounding box for the patch centered at (x, y)
-            left = max(x - half_patch, 0)
-            top = max(y - half_patch, 0)
-            right = min(x + half_patch, width)
-            bottom = min(y + half_patch, height)
-
-            patch = image[top:bottom, left:right]
-            patch_pil = fromarray(patch)
-            patch_tensor = transform(patch_pil).unsqueeze(0)
-            patches.append(patch_tensor)
-
-    patches_tensor = torch.cat(patches, dim=0).to(device)
-
-    with torch.no_grad():
-        outputs = model(patches_tensor)
-
-    _, predicted_classes = torch.max(outputs, 1)
-    predictions = [(centers[i][0], centers[i][1], predicted_classes[i].item()) for i in range(len(centers))]
-
-    return predictions'''
+    return graph_nodes

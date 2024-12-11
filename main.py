@@ -3,22 +3,21 @@ import shutil
 import threading
 from time import sleep
 
-from cv2 import cvtColor, COLOR_BGR2RGB, COLOR_BGR2GRAY
+from cv2 import cvtColor, COLOR_BGR2RGB, COLOR_BGR2GRAY, imread
 
+from graph_builder import build_graph
 from node_classification import classifyNodes
-from line_classification import classifyLines
+from edge_classification import classifyEdges
 from priority_functions import template_matching
-from screen_functions import grabImage, showScreen, showNodes, showLines, showTrees
+from screen_functions import grabImage, showScreen, showNodes, showEdges, showGraphs
 from win32gui import GetWindowRect, GetDesktopWindow
-from build_trees import buildTrees
 from tree_interaction import move_and_click, move_and_click_list, monitor_delete_key
 
 hwnd = GetDesktopWindow()
 rect = GetWindowRect(hwnd)
 char = 'Nurse'
 counter = 0
-web_center = (683, 562)
-save = True
+save = False
 
 with open('stored/Levels', 'r') as f:
     line = f.readline().strip()
@@ -37,20 +36,20 @@ while not exit_event.is_set():
     screen = cvtColor(screen, COLOR_BGR2RGB)
     screen_gray = cvtColor(screen, COLOR_BGR2GRAY)
 
-    matches = template_matching(screen, char)
-    move_and_click_list(matches)
+    '''matches = template_matching(screen, char)
+    move_and_click_list(matches)'''
 
-    image = grabImage(rect[2], rect[3], 0, 0, hwnd)
+    #image = grabImage(rect[2], rect[3], 0, 0, hwnd)
+    image = imread('stored/screen.png')
     nodes = classifyNodes(image)
-    lines = classifyLines(image)
-    trees = buildTrees(nodes, lines, web_center, levels)
+    edges = classifyEdges(image, nodes)
 
-    showNodes(image, nodes, counter, save)
-    showLines(image, lines, counter, save)
-    showTrees(image, trees, counter, save)
+    graph = build_graph(nodes, edges)
+    #showEdges(image, graph, save)
+    showGraphs(image, graph, edges, save)
+
+    #showNodes(image, nodes, save, counter)
+    #showEdges(image, edges, save, counter)
     counter += 1
 
-    try:
-        move_and_click((trees[0].root.node[0], trees[0].root.node[1]))
-    except IndexError:
-        sleep(3.8)
+    break

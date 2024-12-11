@@ -78,7 +78,7 @@ def calculateLevels(web_center):
             f.write(f"{clusters[0]},{clusters[1]},{clusters[2]}\n")
     return
 
-def sortNodes():
+def sortNodes(image):
     centers = []
     levels = []
 
@@ -87,28 +87,42 @@ def sortNodes():
     top = []
 
     with open('stored/Centers', 'r') as f:
-        centers = [tuple(map(int, line.strip().split(','))) for line in f.readlines()]
+        centers = [list(map(int, line.strip().split(','))) for line in f.readlines()]
 
     with open('stored/Levels', 'r') as f:
         line = f.readline().strip()
         levels = [float(x) for x in line.split(',')]
 
     for center in centers:
-        distance = calculate_distance(center, web_center)
+        distance = calculate_distance((center[0], center[1]), web_center)
         center_level = min(levels, key=lambda x: abs(x - distance))
 
-        if center_level == levels[0]:
-            bottom.append(center)
-        elif center_level == levels[1]:
-            middle.append(center)
+        if len(center) == 2:
+            if center_level == levels[0]:
+                bottom.append(center +[1])
+            elif center_level == levels[1]:
+                middle.append(center + [2])
+            else:
+                top.append(center + [3])
         else:
-            top.append(center)
+            if center_level == levels[0]:
+                bottom.append(center)
+            elif center_level == levels[1]:
+                middle.append(center)
+            else:
+                top.append(center)
 
     sorted_centers = bottom + middle + top
 
+    center_node = cv2.imread('stored/center_node.png')
+    result = cv2.matchTemplate(image, center_node, cv2.TM_CCOEFF_NORMED)
+    min_val, max_val_line, min_loc, max_loc = cv2.minMaxLoc(result)
+
     with open('stored/Centers', 'w') as f:
-        for x, y in sorted_centers:
-            f.write(f"{x},{y}\n")
+        for x, y, l in sorted_centers:
+            f.write(f"{x},{y},{l}\n")
+
+        f.write(f"{max_loc[0] + center_node.shape[0] // 2},{max_loc[1] + center_node.shape[1] // 2},0")
 
 hwnd = GetDesktopWindow()
 dim = GetWindowRect(hwnd)
@@ -117,4 +131,4 @@ web_center = (683, 562)
 rawImage = grabImage(dim[2], dim[3], 0, 0, hwnd)
 #circles = detectNodes(rawImage)
 #calculateLevels(web_center)
-#sortNodes()
+sortNodes(rawImage)

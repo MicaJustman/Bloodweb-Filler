@@ -24,7 +24,7 @@ def move_and_click_list(matches):
 
 def monitor_delete_key(event):
     while True:
-        if keyboard.is_pressed('delete'):
+        if keyboard.is_pressed('alt'):
             event.set()
             return
         sleep(0.1)
