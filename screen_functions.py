@@ -91,6 +91,9 @@ def showGraphs(img, graphs, edges, s, counter=0):
             if edge[0] in graph.nodes and edge[1] in graph.nodes:
                 cv2.line(image, edge[0].position, edge[1].position, list(colors.values())[counter], 4, cv2.LINE_AA)
 
+        for node in graph.roots:
+            cv2.circle(image, node.position, 7, list(colors.values())[counter], 16)
+
         counter += 1
 
     if s:

@@ -5,7 +5,7 @@ from time import sleep
 
 from cv2 import cvtColor, COLOR_BGR2RGB, COLOR_BGR2GRAY, imread
 
-from graph_builder import build_graph
+from graph_builder import buildGraph
 from node_classification import classifyNodes
 from edge_classification import classifyEdges
 from priority_functions import template_matching
@@ -44,8 +44,8 @@ while not exit_event.is_set():
     nodes = classifyNodes(image)
     edges = classifyEdges(image, nodes)
 
-    graph = build_graph(nodes, edges)
-    #showEdges(image, graph, save)
+    graph = buildGraph(nodes, edges, image)
+    #showNodes(image, graph, save)
     showGraphs(image, graph, edges, save)
 
     #showNodes(image, nodes, save, counter)
